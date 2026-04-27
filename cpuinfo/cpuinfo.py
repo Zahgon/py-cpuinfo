@@ -41,22 +41,7 @@ g_trace = None
 
 class Trace(object):
 	def __init__(self, is_active, is_stored_in_string):
-		self._is_active = is_active
-		if not self._is_active:
-			return
-
-		from datetime import datetime
-		from io import StringIO
-
-		if is_stored_in_string:
-			self._output = StringIO()
-		else:
-			date = datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
-			self._output = open('cpuinfo_trace_{0}.trace'.format(date), 'w')
-
-		self._stdout = StringIO()
-		self._stderr = StringIO()
-		self._err = None
+		pass
 
 	def header(self, msg):
 		if not self._is_active: return
@@ -189,7 +174,7 @@ class DataSource(object):
 
 	@staticmethod
 	def has_sestatus():
-		return len(_program_paths('sestatus')) > 0
+		pass
 
 	@staticmethod
 	def has_sysctl():
@@ -232,7 +217,7 @@ class DataSource(object):
 
 	@staticmethod
 	def sestatus_b():
-		return _run_and_get_stdout(['sestatus', '-b'])
+		pass
 
 	@staticmethod
 	def dmesg_a():
@@ -367,14 +352,7 @@ def _check_arch():
 		                "and some ARM/PPC/S390X/MIPS/RISCV CPUs.")
 
 def _obj_to_b64(thing):
-	import pickle
-	import base64
-
-	a = thing
-	b = pickle.dumps(a)
-	c = base64.b64encode(b)
-	d = c.decode('utf8')
-	return d
+	pass
 
 def _b64_to_obj(thing):
 	import pickle
@@ -388,13 +366,7 @@ def _b64_to_obj(thing):
 		return {}
 
 def _utf_to_str(input):
-	if isinstance(input, list):
-		return [_utf_to_str(element) for element in input]
-	elif isinstance(input, dict):
-		return {_utf_to_str(key): _utf_to_str(value)
-			for key, value in input.items()}
-	else:
-		return input
+	pass
 
 def _copy_new_fields(info, new_info):
 	keys = [
@@ -501,26 +473,7 @@ def _hz_short_to_full(ticks, scale):
 		return (0, 0)
 
 def _hz_friendly_to_full(hz_string):
-	try:
-		hz_string = hz_string.strip().lower()
-		hz, scale = (None, None)
-
-		if hz_string.endswith('ghz'):
-			scale = 9
-		elif hz_string.endswith('mhz'):
-			scale = 6
-		elif hz_string.endswith('hz'):
-			scale = 0
-
-		hz = "".join(n for n in hz_string if n.isdigit() or n=='.').strip()
-		if not '.' in hz:
-			hz += '.0'
-
-		hz, scale = _hz_short_to_full(hz, scale)
-
-		return (hz, scale)
-	except Exception:
-		return (0, 0)
+	pass
 
 def _hz_short_to_friendly(ticks, scale):
 	try:
@@ -840,39 +793,7 @@ def _is_bit_set(reg, bit):
 
 def _is_selinux_enforcing(trace):
 	# Just return if the SE Linux Status Tool is not installed
-	if not DataSource.has_sestatus():
-		trace.fail('Failed to find sestatus.')
-		return False
-
-	# Run the sestatus, and just return if it failed to run
-	returncode, output = DataSource.sestatus_b()
-	if returncode != 0:
-		trace.fail('Failed to run sestatus. Skipping ...')
-		return False
-
-	# Figure out if explicitly in enforcing mode
-	for line in output.splitlines():
-		line = line.strip().lower()
-		if line.startswith("current mode:"):
-			if line.endswith("enforcing"):
-				return True
-			else:
-				return False
-
-	# Figure out if we can execute heap and execute memory
-	can_selinux_exec_heap = False
-	can_selinux_exec_memory = False
-	for line in output.splitlines():
-		line = line.strip().lower()
-		if line.startswith("allow_execheap") and line.endswith("on"):
-			can_selinux_exec_heap = True
-		elif line.startswith("allow_execmem") and line.endswith("on"):
-			can_selinux_exec_memory = True
-
-	trace.command_output('can_selinux_exec_heap:', can_selinux_exec_heap)
-	trace.command_output('can_selinux_exec_memory:', can_selinux_exec_memory)
-
-	return (not can_selinux_exec_heap or not can_selinux_exec_memory)
+	pass
 
 def _filter_dict_keys_with_empty_values(info, acceptable_values = {}):
 	filtered_info = {}
@@ -995,11 +916,7 @@ class ASM(object):
 
 class CPUID(object):
 	def __init__(self, trace=None):
-		if trace is None:
-			trace = Trace(False, False)
-
-		# Figure out if SE Linux is on and in enforcing mode
-		self.is_selinux_enforcing = _is_selinux_enforcing(trace)
+		pass
 
 	def _asm_func(self, restype=None, argtypes=(), machine_code=[]):
 		asm = ASM(restype, argtypes, machine_code)
@@ -1474,13 +1391,7 @@ class CPUID(object):
 			old_func = get_ticks_x86_32.func
 			def new_func():
 				# Pass two uint32s into function
-				high = ctypes.c_uint32(0)
-				low = ctypes.c_uint32(0)
-				old_func(ctypes.byref(high), ctypes.byref(low))
-
-				# Shift the two uint32s into one uint64
-				retval = ((high.value << 32) & 0xFFFFFFFF00000000) | low.value
-				return retval
+				pass
 			get_ticks_x86_32.func = new_func
 
 			retval = get_ticks_x86_32
@@ -1595,15 +1506,7 @@ def _get_cpu_info_from_cpuid_actual():
 	return trace.to_dict(info, False)
 
 def _get_cpu_info_from_cpuid_subprocess_wrapper(queue):
-	orig_stdout = sys.stdout
-	orig_stderr = sys.stderr
-
-	output = _get_cpu_info_from_cpuid_actual()
-
-	sys.stdout = orig_stdout
-	sys.stderr = orig_stderr
-
-	queue.put(_obj_to_b64(output))
+	pass
 
 def _get_cpu_info_from_cpuid():
 	'''
@@ -2721,47 +2624,14 @@ def get_cpu_info_json():
 	Returns the CPU info by using the best sources of information for your OS.
 	Returns the result in a json string
 	'''
-
-	import json
-
-	output = None
-
-	# If running under pyinstaller, run normally
-	if getattr(sys, 'frozen', False):
-		info = _get_cpu_info_internal()
-		output = json.dumps(info)
-		output = "{0}".format(output)
-	# if not running under pyinstaller, run in another process.
-	# This is done because multiprocesing has a design flaw that
-	# causes non main programs to run multiple times on Windows.
-	else:
-		from subprocess import Popen, PIPE
-
-		command = [sys.executable, __file__, '--json']
-		p1 = Popen(command, stdout=PIPE, stderr=PIPE, stdin=PIPE)
-		output = p1.communicate()[0]
-
-		if p1.returncode != 0:
-			return "{}"
-
-		output = output.decode(encoding='UTF-8')
-
-	return output
+	pass
 
 def get_cpu_info():
 	'''
 	Returns the CPU info by using the best sources of information for your OS.
 	Returns the result in a dict
 	'''
-
-	import json
-
-	output = get_cpu_info_json()
-
-	# Convert JSON to Python with non unicode strings
-	output = json.loads(output, object_hook = _utf_to_str)
-
-	return output
+	pass
 
 def main():
 	from argparse import ArgumentParser
